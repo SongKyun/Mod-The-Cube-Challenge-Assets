@@ -1,29 +1,57 @@
 ﻿using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class Cube : MonoBehaviour
 {
     public MeshRenderer Renderer;
-    public float opacity = 0.3f; // 불투명도 값
+    public float colorChangeInterval = 1f; // 색상 변경 간격
+    public float opacityMin = 0.2f; // 최소 불투명도 값
+    public float opacityMax = 1f; // 최대 불투명도 값
 
-    void Start()
+    private Material material;
+    private Color initialColor;
+    private Color targetColor;
+
+    private float initialOpacity;
+    private float targetOpacity;
+
+    private void Start()
     {
+        transform.localScale = Vector3.one * 2.0f;
         transform.position = new Vector3(0, 5, 0);
-        transform.localScale = Vector3.one * 3.0f;
 
-        Material material = Renderer.sharedMaterial;
 
-        Color color = material.color;
-        color = Color.yellow; // 색상을 먼저 설정
-        color.a = opacity; // 알파 값을 변경
-        material.color = color;
+        material = Renderer.material;
+        initialColor = material.color;
+        initialOpacity = material.color.a;
 
-        Renderer.material = material; // 수정된 머티리얼을 다시 할당
+        StartCoroutine(ChangeColorRandomly());
     }
 
-    void Update()
+    private void Update()
     {
-        transform.Rotate(0.0f, 20.0f * Time.deltaTime, 0.0f);
+        transform.Rotate(0.0f, 80.0f * Time.deltaTime, 80.0f * Time.deltaTime);
+    }
+
+    private IEnumerator ChangeColorRandomly()
+    {
+        while (true)
+        {
+            targetColor = Random.ColorHSV();
+            targetOpacity = Random.Range(opacityMin, opacityMax);
+            float elapsedTime = 0f;
+
+            while (elapsedTime < colorChangeInterval)
+            {
+                elapsedTime += Time.deltaTime;
+                Color currentColor = Color.Lerp(initialColor, targetColor, elapsedTime / colorChangeInterval);
+                currentColor.a = Mathf.Lerp(initialOpacity, targetOpacity, elapsedTime / colorChangeInterval);
+                material.color = currentColor;
+                yield return null;
+            }
+
+            initialColor = targetColor;
+            initialOpacity = targetOpacity;
+        }
     }
 }
